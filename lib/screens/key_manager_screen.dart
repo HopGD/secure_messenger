@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/crypto_provider.dart';
+import '../models/rsa_key_model.dart';
 
 class KeyManagerScreen extends StatelessWidget {
   const KeyManagerScreen({super.key});

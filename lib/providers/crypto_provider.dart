@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:html' as html;
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:fast_rsa/fast_rsa.dart';
@@ -85,6 +86,7 @@ class CryptoProvider extends ChangeNotifier {
     }
   }
   final _storage = const FlutterSecureStorage();
+  bool _isWeb = false;
 
   List<RsaKeyModel> _myKeys = [];
   List<RsaKeyModel> _contactKeys = [];
@@ -96,13 +98,29 @@ class CryptoProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   CryptoProvider() {
+    _isWeb = html.window.document.documentElement != null;
     _loadKeys();
+  }
+
+  Future<String?> _readFromStorage(String key) async {
+    if (_isWeb) {
+      return html.window.localStorage[key];
+    }
+    return await _storage.read(key: key);
+  }
+
+  Future<void> _writeToStorage(String key, String value) async {
+    if (_isWeb) {
+      html.window.localStorage[key] = value;
+      return;
+    }
+    await _storage.write(key: key, value: value);
   }
 
   Future<void> _loadKeys() async {
     try {
-      String? myKeysJson = await _storage.read(key: 'my_keys');
-      String? contactKeysJson = await _storage.read(key: 'contact_keys');
+      String? myKeysJson = await _readFromStorage('my_keys');
+      String? contactKeysJson = await _readFromStorage('contact_keys');
 
       if (myKeysJson != null) {
         Iterable l = json.decode(myKeysJson);
@@ -121,8 +139,8 @@ class CryptoProvider extends ChangeNotifier {
 
   Future<void> _saveKeys() async {
     try {
-      await _storage.write(key: 'my_keys', value: json.encode(_myKeys.map((e) => e.toMap()).toList()));
-      await _storage.write(key: 'contact_keys', value: json.encode(_contactKeys.map((e) => e.toMap()).toList()));
+      await _writeToStorage('my_keys', json.encode(_myKeys.map((e) => e.toMap()).toList()));
+      await _writeToStorage('contact_keys', json.encode(_contactKeys.map((e) => e.toMap()).toList()));
       notifyListeners();
     } catch (e) {
       debugPrint("Error guardando llaves: $e");
