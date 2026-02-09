@@ -25,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final crypto = Provider.of<CryptoProvider>(context);
 
-    if (_selectedContactKey != null && !crypto.contactKeys.contains(_selectedContactKey)) {
+    if (_selectedContactKey != null &&
+        !crypto.contactKeys.contains(_selectedContactKey)) {
       _selectedContactKey = null;
     }
     if (_selectedMyKey != null && !crypto.myKeys.contains(_selectedMyKey)) {
@@ -43,7 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const KeyManagerScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const KeyManagerScreen()),
               );
             },
           )
@@ -56,7 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceVariant
+                    .withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade300),
               ),
@@ -65,8 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _isEncryptMode ? "ENTRADA (Texto Plano)" : "ENTRADA (Texto Cifrado)",
-                    style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+                    _isEncryptMode
+                        ? "ENTRADA (Texto Plano)"
+                        : "ENTRADA (Texto Cifrado)",
+                    style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold),
                   ),
                   Expanded(
                     child: TextField(
@@ -87,8 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: IconButton(
                       icon: const Icon(Icons.paste),
                       onPressed: () async {
-                        final data = await Clipboard.getData(Clipboard.kTextPlain);
-                        if (data?.text != null) _inputController.text = data!.text!;
+                        final data =
+                            await Clipboard.getData(Clipboard.kTextPlain);
+                        if (data?.text != null) {
+                          _inputController.text = data!.text!;
+                        }
                       },
                     ),
                   )
@@ -104,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(context).colorScheme.surfaceVariant,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _buildKeySelector(crypto),
@@ -131,8 +143,10 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () => _processAction(crypto),
-                style: FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
-                icon: Icon(_isEncryptMode ? Icons.lock_outline : Icons.lock_open),
+                style:
+                    FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
+                icon:
+                    Icon(_isEncryptMode ? Icons.lock_outline : Icons.lock_open),
                 label: Text(
                   _isEncryptMode ? "ENCRIPTAR MENSAJE" : "DESENCRIPTAR MENSAJE",
                   style: const TextStyle(fontWeight: FontWeight.bold),
@@ -145,7 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(16),
@@ -154,7 +171,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     _isEncryptMode ? "SALIDA (Cifrado)" : "SALIDA (Legible)",
-                    style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold),
                   ),
                   Expanded(
                     child: TextField(
@@ -162,7 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       readOnly: true,
                       maxLines: null,
                       expands: true,
-                      decoration: const InputDecoration(border: InputBorder.none),
+                      decoration:
+                          const InputDecoration(border: InputBorder.none),
                       style: TextStyle(
                         fontSize: 18,
                         fontFamily: _isEncryptMode ? 'Courier' : null,
@@ -175,7 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: IconButton(
                       icon: const Icon(Icons.copy),
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: _outputController.text));
+                        Clipboard.setData(
+                            ClipboardData(text: _outputController.text));
                         ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Resultado copiado")));
                       },
@@ -195,7 +216,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (crypto.contactKeys.isEmpty) {
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
-          child: Text("Sin contactos (Importa una llave)", style: TextStyle(color: Colors.red)),
+          child: Text("Sin contactos (Importa una llave)",
+              style: TextStyle(color: Colors.red)),
         );
       }
       return DropdownButtonHideUnderline(
@@ -204,7 +226,8 @@ class _HomeScreenState extends State<HomeScreen> {
           value: _selectedContactKey,
           hint: const Text("Para: Seleccionar Contacto"),
           items: crypto.contactKeys.map((k) {
-            return DropdownMenuItem(value: k, child: Text(k.name, overflow: TextOverflow.ellipsis));
+            return DropdownMenuItem(
+                value: k, child: Text(k.name, overflow: TextOverflow.ellipsis));
           }).toList(),
           onChanged: (val) => setState(() => _selectedContactKey = val),
         ),
@@ -213,7 +236,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (crypto.myKeys.isEmpty) {
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
-          child: Text("Sin llaves propias (Genera una)", style: TextStyle(color: Colors.red)),
+          child: Text("Sin llaves propias (Genera una)",
+              style: TextStyle(color: Colors.red)),
         );
       }
       return DropdownButtonHideUnderline(
@@ -222,7 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
           value: _selectedMyKey,
           hint: const Text("Usar mi llave: Seleccionar"),
           items: crypto.myKeys.map((k) {
-            return DropdownMenuItem(value: k, child: Text(k.name, overflow: TextOverflow.ellipsis));
+            return DropdownMenuItem(
+                value: k, child: Text(k.name, overflow: TextOverflow.ellipsis));
           }).toList(),
           onChanged: (val) => setState(() => _selectedMyKey = val),
         ),
@@ -235,17 +260,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_isEncryptMode) {
       if (_selectedContactKey == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selecciona un destinatario")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Selecciona un destinatario")));
         return;
       }
-      final result = await crypto.encryptMessage(_inputController.text, _selectedContactKey!);
+      final result = await crypto.encryptMessage(
+          _inputController.text, _selectedContactKey!);
       setState(() => _outputController.text = result);
     } else {
       if (_selectedMyKey == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selecciona tu llave privada")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Selecciona tu llave privada")));
         return;
       }
-      final result = await crypto.decryptMessage(_inputController.text, _selectedMyKey!);
+      final result =
+          await crypto.decryptMessage(_inputController.text, _selectedMyKey!);
       setState(() => _outputController.text = result);
     }
   }

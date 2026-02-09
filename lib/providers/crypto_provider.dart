@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
-import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:fast_rsa/fast_rsa.dart';
@@ -8,7 +7,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/rsa_key_model.dart';
 
 class CryptoProvider extends ChangeNotifier {
-
   static const String _publicKeyHeader = '-----BEGIN PUBLIC KEY-----';
   static const String _publicKeyFooter = '-----END PUBLIC KEY-----';
   static const String _privateKeyHeader = '-----BEGIN PRIVATE KEY-----';
@@ -16,7 +14,8 @@ class CryptoProvider extends ChangeNotifier {
 
   static bool isValidPublicKeyFormat(String key) {
     final trimmed = key.trim();
-    if (!trimmed.startsWith(_publicKeyHeader) || !trimmed.endsWith(_publicKeyFooter)) {
+    if (!trimmed.startsWith(_publicKeyHeader) ||
+        !trimmed.endsWith(_publicKeyFooter)) {
       return false;
     }
     final content = trimmed
@@ -31,7 +30,8 @@ class CryptoProvider extends ChangeNotifier {
 
   static bool isValidPrivateKeyFormat(String key) {
     final trimmed = key.trim();
-    if (!trimmed.startsWith(_privateKeyHeader) || !trimmed.endsWith(_privateKeyFooter)) {
+    if (!trimmed.startsWith(_privateKeyHeader) ||
+        !trimmed.endsWith(_privateKeyFooter)) {
       return false;
     }
     final content = trimmed
@@ -82,11 +82,15 @@ class CryptoProvider extends ChangeNotifier {
       final hash = sha256.convert(bytes);
       return hash.toString().substring(0, 8).toUpperCase();
     } catch (e) {
-      return DateTime.now().millisecondsSinceEpoch.toRadixString(16).substring(0, 6).toUpperCase();
+      return DateTime.now()
+          .millisecondsSinceEpoch
+          .toRadixString(16)
+          .substring(0, 6)
+          .toUpperCase();
     }
   }
+
   final _storage = const FlutterSecureStorage();
-  bool _isWeb = false;
 
   List<RsaKeyModel> _myKeys = [];
   List<RsaKeyModel> _contactKeys = [];
@@ -98,22 +102,14 @@ class CryptoProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   CryptoProvider() {
-    _isWeb = html.window.document.documentElement != null;
     _loadKeys();
   }
 
   Future<String?> _readFromStorage(String key) async {
-    if (_isWeb) {
-      return html.window.localStorage[key];
-    }
     return await _storage.read(key: key);
   }
 
   Future<void> _writeToStorage(String key, String value) async {
-    if (_isWeb) {
-      html.window.localStorage[key] = value;
-      return;
-    }
     await _storage.write(key: key, value: value);
   }
 
@@ -124,12 +120,14 @@ class CryptoProvider extends ChangeNotifier {
 
       if (myKeysJson != null) {
         Iterable l = json.decode(myKeysJson);
-        _myKeys = List<RsaKeyModel>.from(l.map((model) => RsaKeyModel.fromMap(model)));
+        _myKeys = List<RsaKeyModel>.from(
+            l.map((model) => RsaKeyModel.fromMap(model)));
       }
 
       if (contactKeysJson != null) {
         Iterable l = json.decode(contactKeysJson);
-        _contactKeys = List<RsaKeyModel>.from(l.map((model) => RsaKeyModel.fromMap(model)));
+        _contactKeys = List<RsaKeyModel>.from(
+            l.map((model) => RsaKeyModel.fromMap(model)));
       }
       notifyListeners();
     } catch (e) {
@@ -139,8 +137,10 @@ class CryptoProvider extends ChangeNotifier {
 
   Future<void> _saveKeys() async {
     try {
-      await _writeToStorage('my_keys', json.encode(_myKeys.map((e) => e.toMap()).toList()));
-      await _writeToStorage('contact_keys', json.encode(_contactKeys.map((e) => e.toMap()).toList()));
+      await _writeToStorage(
+          'my_keys', json.encode(_myKeys.map((e) => e.toMap()).toList()));
+      await _writeToStorage('contact_keys',
+          json.encode(_contactKeys.map((e) => e.toMap()).toList()));
       notifyListeners();
     } catch (e) {
       debugPrint("Error guardando llaves: $e");
@@ -153,7 +153,7 @@ class CryptoProvider extends ChangeNotifier {
       var result = await RSA.generate(2048);
 
       final formattedPublicKey = formatPublicKey(result.publicKey);
-      final formattedPrivateKey = formatPrivateKey(result.privateKey!);
+      final formattedPrivateKey = formatPrivateKey(result.privateKey);
       final friendlyId = generateFriendlyKeyId(formattedPublicKey);
 
       final newKey = RsaKeyModel(
