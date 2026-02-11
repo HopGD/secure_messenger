@@ -41,28 +41,72 @@ class KeyManagerScreen extends StatelessWidget {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: crypto.isLoading ? null : () => _showGenerateDialog(context, crypto),
+              onPressed: crypto.isLoading
+                  ? null
+                  : () => _showGenerateDialog(context, crypto),
               icon: crypto.isLoading
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.add),
-              label: Text(crypto.isLoading ? "Generando..." : "Generar Nuevo Par de Llaves"),
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+              label: Text(crypto.isLoading
+                  ? "Generando..."
+                  : "Generar Nuevo Par de Llaves"),
+              style:
+                  ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
             ),
           ),
         ),
         Expanded(
           child: crypto.myKeys.isEmpty
-              ? const Center(child: Text("No tienes llaves. Genera una para empezar."))
+              ? const Center(
+                  child: Text("No tienes llaves. Genera una para empezar."))
               : ListView.separated(
                   itemCount: crypto.myKeys.length,
                   separatorBuilder: (_, __) => const Divider(),
                   itemBuilder: (ctx, i) {
                     final key = crypto.myKeys[i];
-                    final shortId = CryptoProvider.generateFriendlyKeyId(key.publicKey);
+                    final shortId =
+                        CryptoProvider.generateFriendlyKeyId(key.publicKey);
                     return ExpansionTile(
                       leading: const Icon(Icons.vpn_key, color: Colors.blue),
-                      title: Text(key.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(key.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text("ID: $shortId"),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) async {
+                          if (value == 'delete') {
+                            crypto.deleteKey(key.id, true);
+                          } else if (value == 'regenerate') {
+                            _showRegenerateDialog(context, crypto, key);
+                          }
+                        },
+                        itemBuilder: (ctx) => [
+                          PopupMenuItem(
+                            value: 'regenerate',
+                            child: Row(
+                              children: const [
+                                Icon(Icons.refresh, size: 20),
+                                SizedBox(width: 8),
+                                Text("Regenerar Llaves"),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: const [
+                                Icon(Icons.delete, size: 20, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text("Eliminar",
+                                    style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -74,10 +118,16 @@ class KeyManagerScreen extends StatelessWidget {
                                   Expanded(
                                     child: OutlinedButton.icon(
                                       onPressed: () {
-                                        final formatted = CryptoProvider.formatPublicKey(key.publicKey);
-                                        Clipboard.setData(ClipboardData(text: formatted));
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Llave pública copiada")),
+                                        final formatted =
+                                            CryptoProvider.formatPublicKey(
+                                                key.publicKey);
+                                        Clipboard.setData(
+                                            ClipboardData(text: formatted));
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  "Llave pública copiada")),
                                         );
                                       },
                                       icon: const Icon(Icons.share),
@@ -87,7 +137,8 @@ class KeyManagerScreen extends StatelessWidget {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: OutlinedButton.icon(
-                                      onPressed: () => _showExportDialog(context, key),
+                                      onPressed: () =>
+                                          _showExportDialog(context, key),
                                       icon: const Icon(Icons.qr_code),
                                       label: const Text("Ver Completa"),
                                     ),
@@ -97,7 +148,9 @@ class KeyManagerScreen extends StatelessWidget {
                               const SizedBox(height: 8),
                               Text(
                                 "⚠️ Tu llave PRIVADA nunca debe compartirse. Solo comparte la pública.",
-                                style: TextStyle(color: Colors.orange.shade800, fontSize: 12),
+                                style: TextStyle(
+                                    color: Colors.orange.shade800,
+                                    fontSize: 12),
                               ),
                             ],
                           ),
@@ -122,13 +175,16 @@ class KeyManagerScreen extends StatelessWidget {
               onPressed: () => _showImportDialog(context, crypto),
               icon: const Icon(Icons.person_add),
               label: const Text("Importar Llave Pública de Contacto"),
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+              style:
+                  ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
             ),
           ),
         ),
         Expanded(
           child: crypto.contactKeys.isEmpty
-              ? const Center(child: Text("No tienes contactos. Importa una llave pública."))
+              ? const Center(
+                  child:
+                      Text("No tienes contactos. Importa una llave pública."))
               : ListView.separated(
                   itemCount: crypto.contactKeys.length,
                   separatorBuilder: (_, __) => const Divider(),
@@ -136,11 +192,42 @@ class KeyManagerScreen extends StatelessWidget {
                     final key = crypto.contactKeys[i];
                     return ListTile(
                       leading: const Icon(Icons.public, color: Colors.green),
-                      title: Text(key.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text("Clave: ${key.publicKey.substring(0, 20)}..."),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => crypto.deleteKey(key.id, false),
+                      title: Text(key.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle:
+                          Text("Clave: ${key.publicKey.substring(0, 20)}..."),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            _showEditDialog(context, crypto, key);
+                          } else if (value == 'delete') {
+                            crypto.deleteKey(key.id, false);
+                          }
+                        },
+                        itemBuilder: (ctx) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: const [
+                                Icon(Icons.edit, size: 20),
+                                SizedBox(width: 8),
+                                Text("Editar"),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: const [
+                                Icon(Icons.delete, size: 20, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text("Eliminar",
+                                    style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -160,7 +247,8 @@ class KeyManagerScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("ID: ${CryptoProvider.generateFriendlyKeyId(key.publicKey)}"),
+              Text(
+                  "ID: ${CryptoProvider.generateFriendlyKeyId(key.publicKey)}"),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(8),
@@ -179,7 +267,8 @@ class KeyManagerScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    final formatted = CryptoProvider.formatPublicKey(key.publicKey);
+                    final formatted =
+                        CryptoProvider.formatPublicKey(key.publicKey);
                     Clipboard.setData(ClipboardData(text: formatted));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Llave pública copiada")),
@@ -212,7 +301,8 @@ class KeyManagerScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Esto generará una llave Privada (para ti) y una Pública (para compartir)."),
+            const Text(
+                "Esto generará una llave Privada (para ti) y una Pública (para compartir)."),
             const SizedBox(height: 10),
             TextField(
               controller: controller,
@@ -225,7 +315,9 @@ class KeyManagerScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancelar")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancelar")),
           FilledButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
@@ -256,7 +348,9 @@ class KeyManagerScreen extends StatelessWidget {
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: "Nombre del Contacto", border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: "Nombre del Contacto",
+                      border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -265,8 +359,10 @@ class KeyManagerScreen extends StatelessWidget {
                     setState(() {
                       if (value.trim().isEmpty) {
                         errorText = null;
-                      } else if (!CryptoProvider.isValidPublicKeyFormat(value)) {
-                        errorText = "Formato de llave pública inválido.\nDebe comenzar con -----BEGIN PUBLIC KEY-----";
+                      } else if (!CryptoProvider.isValidPublicKeyFormat(
+                          value)) {
+                        errorText =
+                            "Formato de llave pública inválido.\nDebe comenzar con -----BEGIN PUBLIC KEY-----";
                       } else {
                         errorText = null;
                       }
@@ -289,7 +385,8 @@ class KeyManagerScreen extends StatelessWidget {
                       keyCtrl.text = data!.text!;
                       if (!CryptoProvider.isValidPublicKeyFormat(data.text!)) {
                         setState(() {
-                          errorText = "El portapapeles no contiene una llave pública válida.";
+                          errorText =
+                              "El portapapeles no contiene una llave pública válida.";
                         });
                       }
                     }
@@ -309,9 +406,13 @@ class KeyManagerScreen extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancelar")),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Cancelar")),
             FilledButton(
-              onPressed: errorText == null && nameCtrl.text.isNotEmpty && keyCtrl.text.isNotEmpty
+              onPressed: errorText == null &&
+                      nameCtrl.text.isNotEmpty &&
+                      keyCtrl.text.isNotEmpty
                   ? () {
                       crypto.importContactKey(nameCtrl.text, keyCtrl.text);
                       Navigator.pop(ctx);
@@ -321,6 +422,124 @@ class KeyManagerScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEditDialog(
+      BuildContext context, CryptoProvider crypto, RsaKeyModel key) {
+    final nameCtrl = TextEditingController(text: key.name);
+    final keyCtrl = TextEditingController(text: key.publicKey);
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text("Editar Contacto"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: "Nombre del Contacto",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: keyCtrl,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: "Llave Pública",
+                    border: const OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.grey.shade200,
+                  ),
+                  maxLines: 3,
+                  minLines: 2,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Nota: Para cambiar la llave pública, elimina este contacto y crea uno nuevo.",
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancelar"),
+            ),
+            FilledButton(
+              onPressed: nameCtrl.text.isNotEmpty
+                  ? () {
+                      final index =
+                          crypto.contactKeys.indexWhere((k) => k.id == key.id);
+                      if (index != -1) {
+                        crypto.contactKeys[index] = RsaKeyModel(
+                          id: key.id,
+                          name: nameCtrl.text,
+                          publicKey: key.publicKey,
+                        );
+                        crypto.notifyListeners();
+                      }
+                      Navigator.pop(ctx);
+                    }
+                  : null,
+              child: const Text("Guardar"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRegenerateDialog(
+      BuildContext context, CryptoProvider crypto, RsaKeyModel oldKey) {
+    final controller = TextEditingController(text: oldKey.name);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Regenerar Llaves"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Esto eliminará la llave anterior y generará un nuevo par de llaves (privada y pública).\n\n"
+              "⚠️ Los mensajes cifrados con la llave anterior NO podrán descifrarse.",
+              style: TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: "Nuevo nombre (opcional)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancelar"),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              crypto.deleteKey(oldKey.id, true);
+              crypto.generateNewKeyPair(
+                  controller.text.isNotEmpty ? controller.text : oldKey.name);
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Regenerar"),
+          ),
+        ],
       ),
     );
   }
